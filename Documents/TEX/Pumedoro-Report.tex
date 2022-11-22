@@ -1,0 +1,103 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tabularx}
+\usepackage{xspace}
+\usepackage{dirtree}
+\usepackage{url}
+\usepackage{color}
+\usepackage[toc,page]{appendix}
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}
+\usepackage[left=2.30cm, right=1.50cm, top=2.00cm, bottom=1.80cm]{geometry}
+
+% \input{P:/Documents/TeX/macros}
+% USAGE DIRTREE
+%==============
+%\dirtree{%
+%	.1 Root.
+%	.2 Level 2 \DTcomment{Level 2 comment}.
+%	.3 Level 3 \DTcomment{Level 3 comment}.
+%}
+
+% USAGE TABULARX
+%================
+%\begin{tabularx}{0.95\textwidth}{|l|X|}
+%	\hline
+%	Header 1	& Header 2		\\
+%	\hline
+%	Line 1 Left	& Line 1 Right 	\\
+%	Line 2 Left	& Line 2 Right 	\\
+%	\hline
+%\end{tabularx}
+
+%USAGE ITEMIZE WITH ITEMSEP
+%==========================
+%\begin{itemize}\itemsep-4pt
+%\item First Item
+%\item Second Item
+%\item ...
+%\item Last Item
+%\end{itemize}
+
+% USAGE APPENDICES
+%=================
+%\appendices
+%\section{Important Equations}
+
+% MATRICES
+%=========
+% matrix		no borders
+% pmatrix		()
+% bmatrix		[]
+% vmatrix		||
+% Vmatrix		|| ||
+% BMatrix		{}
+
+% ALIGNMENT
+% =========
+% \begin{equation}\label{key}
+% 	\begin{aligned}
+% 		a   &= x_{ij} \\
+% 		b_j &= y_j 
+% 	\end{aligned}
+% \end{equation}
+
+% AUTO COUNTER (the prefix here being "Requirement")
+%===================================================
+% \newcounter{ReqCounter}
+% \newcommand{\req}{\protect\stepcounter{ReqCounter}\textbf{Requirement} \textbf{\theReqCounter.}}
+
+\author{Stanislav Koncebovski}
+\title{Project Pumedoro}
+\date{2022-11-22}
+
+\begin{document}
+	\maketitle
+	
+	\section{Abstract}
+	% what it is about
+	
+	\section{Motivation}
+	
+	\section{Data Extraction}
+	% all phases
+		\subsection{Program Tools}
+		
+	\section{Results}
+		% raw results: what are they, where and overview
+		
+	\section{Result Discussion}
+	
+	\section{The Pumedoro Database}
+	
+	\section{Conclusions}
+	
+	\bibliography{ieeetr}
+	
+\end{document}
