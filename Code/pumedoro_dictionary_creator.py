@@ -41,6 +41,11 @@ class PumedoroDictionaryCreator:
         '''
         return self._dictionary
 
+    @property
+    def dataframe(self):
+        df = pd.DataFrame.from_dict(self._dictionary, orient='index', columns=['occ_given', 'occ_family', 'soundex', 'metaphone'])
+        return df
+
     def clear_dictionary(self):
         '''
         Empties the name dictionary.
@@ -48,13 +53,29 @@ class PumedoroDictionaryCreator:
         '''
         self._dictionary.clear()
 
-    def update_dictionary(self, folder: str):
+    def update_dictionary(self, folder: str, recursive: bool = True):
         '''
         Updates the name dictionary from a folder containing XML files with raw extraction data.
         @param folder: The path to the folder.
+        @param recursive: carry out recursively.
         @return: None.
         '''
-        pass
+        file_names = glob.glob(folder + '/**/*.xml', recursive=True)[:4]
+
+        count = 1
+        for file_name in file_names:
+            print(f"Processing file {file_name} ({count} of {len(file_names)})")
+            self._update_dictionary_from_file(file_name)
+            count += 1
+
+    def store_dictionary(self, file_name: str):
+        '''
+        Stores the dictionary as a CSV file
+        @param file_name:
+        @return:
+        '''
+        df = self.dataframe
+        df.to_csv(file_name)
 
     #region Protected Auxiliary
     def _update_dictionary_from_file(self, file_name: str):
@@ -67,9 +88,8 @@ class PumedoroDictionaryCreator:
         authors = root.findall("Author")
 
         for author in authors:
-            # Extract raw strings for the given and family names
+            # Extract and handle raw string for the given names
             given_name_raw = author.find("GivenName").text
-            family_name_raw = author.find("FamilyName").text
 
             given_names = self._get_given_names(given_name_raw)
 
@@ -78,6 +98,15 @@ class PumedoroDictionaryCreator:
                     self._dictionary[given_name][0] += 1
                 else:
                     self._dictionary[given_name] = [1, 0, '', '']
+
+            # Extract and handle raw string for the family name
+            family_name_raw = author.find("FamilyName").text
+            family_name = self._get_family_name(family_name_raw)
+
+            if family_name in self._dictionary:
+                self._dictionary[family_name][1] += 1
+            else:
+                self._dictionary[family_name] = [0, 1, '', '']
 
     def _get_given_names(self, name_string: str, apply_strict_rules: bool = False) -> list[str]:
         '''
@@ -126,16 +155,23 @@ class PumedoroDictionaryCreator:
         "Pogge von Strandmann" -> "Pogge von Strandmann"
         "von dem Knesebeck" -> "von dem Knesebeck"
         '''
-        # TODO: implement me!
-        pass
+        # (1) split by space:
+        items = name_string.split(' ')
+
+        # (2) Remove all prefixes
+        items = [x for x in items if x.upper() not in PumedoroDictionaryCreator.PREFIXES]
+
+        return ' '.join(items)
     #endregion
 
 if __name__ == '__main__':
-    file_name = "covid_Vatican.xml"
-
     creator = PumedoroDictionaryCreator()
 
-    creator._update_dictionary_from_file(file_name)
+    folder = r"P:\Projects\1017.Pumedoro\Data\TrainingData\Covid"
+    creator.update_dictionary(folder)
 
-    for key in creator.dictionary:
-        print(key, creator.dictionary[key])
+    df = creator.dataframe
+
+    print(df.head(50))
+
+    creator.store_dictionary("test.csv")
