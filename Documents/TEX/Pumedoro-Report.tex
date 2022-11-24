@@ -114,6 +114,8 @@
 			\item Items containing '-' are considered given names and are not separated: "Karl-Heinz" $ \rightarrow $ ["Karl-Heinz"]
 			\item Raw strings for given names, if they contain nobiliary particles are most probably results of confusion of given and family names, like in "Bryanne Brissian de Souza" or "Annabelle von der". In such raw strings, the nobiliary particle and all components after it are ignored. A stronger rule might be to ignore such cases completely, since cases are possible like "Dagmar Meyer Zu", where "Meyer" is certainly an item of the family name.
 			\item Items consisting of one character are ignored: "M G M O" $ \rightarrow $ [].
+			\item Items containing one-letter items followed by dot are ignored: "R.N.J.M.A." $ \rightarrow $ [].
+			\item Items containing one-letter items followed by dots and '-' are ignored: "J.-B." $ \rightarrow $ [].
 			\item Prefixes like "Junior", "Jr.", "Senior", etc. are irnored.
 		\end{itemize}
 	

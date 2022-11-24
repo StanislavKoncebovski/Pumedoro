@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pumedoro_name import PumedoroName
 import xml.etree.ElementTree as ET
 import re
@@ -21,6 +23,8 @@ class PumedoroDictionaryCreator:
     '''
     GIVEN_2CHAR_NAME_PATTERN = re.compile("^[A-Z][aeiouy]{1}$|^Ng$")
 
+    ABBREVIATION_PATTERN = re.compile("^([A-Z]\.)+$|^([A-Z]\.)-([A-Z]\.)$")
+
     NOBILIARITY_PARTICLES = ['aan', 'af', 'auf', 'da', 'dai', 'dal', 'dalla', 'das', 'de la', 'de', 'de', 'degli',
                              'dei', 'del', 'della', 'dem', 'den', 'der', 'des', 'des', 'di', 'dos', 'du', 'het',
                              'van', 'vom', 'von', 'zu', 'zur']
@@ -43,9 +47,21 @@ class PumedoroDictionaryCreator:
         '''
         return self._dictionary
 
-    @property
-    def dataframe(self):
-        df = pd.DataFrame.from_dict(self._dictionary, orient='index', columns=['occ_given', 'occ_family', 'soundex', 'metaphone'])
+
+    def get_dataframe(self, sortby: str=''):
+        data = []
+        for key in self._dictionary:
+            data.append([key, self._dictionary[key][0], self._dictionary[key][1], self._dictionary[key][2], self._dictionary[key][3]])
+
+        df = pd.DataFrame(data, columns=['name', 'occ_given', 'occ_family', 'soundex', 'metaphone'])
+
+        if sortby == 'name':
+            df = df.sort_values(by='name')
+        elif sortby == 'occ_given' or sortby == 'given':
+            df = df.sort_values(by='occ_given', ascending=False)
+        elif sortby == 'occ_family' or sortby == 'family':
+            df = df.sort_values(by='occ_family', ascending=False)
+
         return df
 
     def clear_dictionary(self):
@@ -62,25 +78,27 @@ class PumedoroDictionaryCreator:
         @param recursive: carry out recursively.
         @return: None.
         '''
-        file_names = glob.glob(folder + '/**/*.xml', recursive=True)[:4]
+        file_names = glob.glob(folder + '/**/*.xml', recursive=True)
 
         count = 1
         for file_name in file_names:
             print(f"Processing file {file_name} ({count} of {len(file_names)})")
-            self._update_dictionary_from_file(file_name)
+            self.update_dictionary_from_file(file_name)
             count += 1
 
-    def store_dictionary(self, file_name: str):
+    def sort_dictionary(self):
+        pass
+
+    def store_dictionary(self, file_name: str, sortby: str = ''):
         '''
         Stores the dictionary as a CSV file
         @param file_name:
         @return:
         '''
-        df = self.dataframe
+        df = self.get_dataframe(sortby)
         df.to_csv(file_name)
 
-    #region Protected Auxiliary
-    def _update_dictionary_from_file(self, file_name: str):
+    def update_dictionary_from_file(self, file_name: str):
         '''
         Updates the name dictionary from an XML file.
         @param file_name: The name of the file.
@@ -96,6 +114,11 @@ class PumedoroDictionaryCreator:
             given_names = self._get_given_names(given_name_raw)
 
             for given_name in given_names:
+                if given_name is None:
+                    continue
+
+                given_name = given_name.title()
+
                 if given_name in self._dictionary:
                     self._dictionary[given_name][0] += 1
                 else:
@@ -105,11 +128,17 @@ class PumedoroDictionaryCreator:
             family_name_raw = author.find("FamilyName").text
             family_name = self._get_family_name(family_name_raw)
 
+            if family_name is None:
+                continue
+
+            family_name = family_name.title()
+
             if family_name in self._dictionary:
                 self._dictionary[family_name][1] += 1
             else:
                 self._dictionary[family_name] = [0, 1, self._get_soundex(family_name), self._get_metaphone(family_name)]
 
+    # region Protected Auxiliary
     def _get_given_names(self, name_string: str, apply_strict_rules: bool = False) -> list[str]:
         '''
         Extracts valid given names from a raw name string.
@@ -129,6 +158,9 @@ class PumedoroDictionaryCreator:
         # (3) Remove all one-letter items
         items = [x for x in items if len(x) >= 2]
 
+        # (*) Ignore entries like "A.B.C." and "A.-B."
+        items = [x for x in items if not (PumedoroDictionaryCreator.ABBREVIATION_PATTERN.match(x))]
+
         # (4) Handle two-character items
         for item in items:
             if len(item) == 2 and item not in PumedoroDictionaryCreator.NOBILIARITY_PARTICLES:
@@ -144,7 +176,7 @@ class PumedoroDictionaryCreator:
 
         return items
 
-    def _get_family_name(self, name_string: str) -> str:
+    def _get_family_name(self, name_string: str) -> Optional[str]:
         '''
         Extracts valid family name from a raw name string.
         @param name_string: The raw string to extract from.
@@ -158,7 +190,10 @@ class PumedoroDictionaryCreator:
         "von dem Knesebeck" -> "von dem Knesebeck"
         '''
         # (1) split by space:
-        items = name_string.split(' ')
+        try:
+            items = name_string.split(' ')
+        except:
+            return None
 
         # (2) Remove all prefixes
         items = [x for x in items if x.upper() not in PumedoroDictionaryCreator.PREFIXES]
@@ -182,11 +217,11 @@ class PumedoroDictionaryCreator:
 if __name__ == '__main__':
     creator = PumedoroDictionaryCreator()
 
-    folder = r"P:\Projects\1017.Pumedoro\Data\TrainingData\Covid"
+    folder = r"P:\Projects\1017.Pumedoro\Data\TrainingData"
     creator.update_dictionary(folder)
 
-    df = creator.dataframe
+    df = creator.get_dataframe(sortby='given')
 
     print(df.head(50))
 
-    creator.store_dictionary("test.csv")
+    creator.store_dictionary("Training_Data.csv", 'given')
