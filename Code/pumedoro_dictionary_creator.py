@@ -32,6 +32,8 @@ class PumedoroDictionaryCreator:
         The dictionary has a name (case-sensitive string) as the key and an instance of PumedoroName as the value.
         '''
         self._dictionary = {}
+        self._soundex = fuzzy.Soundex(4)
+        self._dmeta = fuzzy.DMetaphone()
 
     @property
     def dictionary(self):
@@ -97,7 +99,7 @@ class PumedoroDictionaryCreator:
                 if given_name in self._dictionary:
                     self._dictionary[given_name][0] += 1
                 else:
-                    self._dictionary[given_name] = [1, 0, '', '']
+                    self._dictionary[given_name] = [1, 0, self._get_soundex(given_name), self._get_metaphone(given_name)]
 
             # Extract and handle raw string for the family name
             family_name_raw = author.find("FamilyName").text
@@ -106,7 +108,7 @@ class PumedoroDictionaryCreator:
             if family_name in self._dictionary:
                 self._dictionary[family_name][1] += 1
             else:
-                self._dictionary[family_name] = [0, 1, '', '']
+                self._dictionary[family_name] = [0, 1, self._get_soundex(family_name), self._get_metaphone(family_name)]
 
     def _get_given_names(self, name_string: str, apply_strict_rules: bool = False) -> list[str]:
         '''
@@ -162,6 +164,19 @@ class PumedoroDictionaryCreator:
         items = [x for x in items if x.upper() not in PumedoroDictionaryCreator.PREFIXES]
 
         return ' '.join(items)
+
+    def _get_soundex(self, text: str):
+        try:
+            return self._soundex(text)
+        except:
+            return ''
+
+    def _get_metaphone(self, text: str):
+        try:
+            return self._dmeta(text)[0].decode("utf-8")
+        except:
+            return ''
+
     #endregion
 
 if __name__ == '__main__':
