@@ -73,20 +73,83 @@
 % \newcounter{ReqCounter}
 % \newcommand{\req}{\protect\stepcounter{ReqCounter}\textbf{Requirement} \textbf{\theReqCounter.}}
 
+\newcommand{\pmd}{PubMed\xspace}
+\newcommand{\gn}{given name\xspace}
+\newcommand{\fn}{family name\xspace}
+\newcommand{\gns}{given names\xspace}
+\newcommand{\fns}{family names\xspace}
+
 \author{Stanislav Koncebovski}
-\title{Project Pumedoro}
+\title{Pumedoro - A Database Of Given And Family Names Of PubMed Articles' Authors}
 \date{2022-11-22}
 
 \begin{document}
 	\maketitle
 	
 	\section{Abstract}
-	% what it is about
+	Given names and \fns of authors were downloaded and extracted from a bulk of \pmd publication queries. The query topics were selected to cover a number of search terms and countries.
+	Statistics of occurrences of \gns and \fns were analyzed. The result of the study is a database of \pmd authors' names.
 	
 	\section{Motivation}
+	The requirement to create a database of person names arose in the course of development of a bibliography management application. An important problem for such systems is the recognition of authors' person names from raw strings. Existing experience shows that, in spite of some defined standard formats of author strings, they are often not followed, so that a raw author string may contain components of a name, such as the \gn (or \gns), the \fn and other components (middle names, prefixes, suffixes) may follow in a random order. Each data provider (\pmd, LibGen, GoogleScholar, GoogleBooks, zbMATH) supports its own data format for person names. Below are a number of examples (no real authors' names were used):
+	\begin{itemize}\itemsep-4pt
+	\item John Wilberforce Atkinson
+	\item Atkinson, John Wilberforce
+	\item Atkinson, John W.
+	\end{itemize}
+
+	In the above example the components can be inferred using a simple heuristics: if the author string has a comma, the item before the comma is to be handled as the \fn, the first item after the comma as the given name, the rest (in this case) as the middle name. In reality, this and practically any other heuristics does not work properly. One significant problem is that an great number of names can be used as \gns and \fns, such as "Thomas" or "Alexander". It is impossible to tell th components in an author string like "Thomas Alexander" or "Alexander Thomas". If you apply the above heuristics to these strings, you could infer that "Thomas" is the \gn in the first case and the \fn in the second. But, since one cannot rely upon these rules, in the end you cannot be sure.
+	
+	A possible strategy could be an empirical statistic of person name components capable of answering the following question: given a name component, how probable is that it is a \gn vs \fn? Though also this strategy does not deliver a magic means to tell the components in cases like "Thomas Alexander", it will answer the question with some degree of statistical certainty. (In this concrete case, "Thomas" had 116047 occurrences of 291569 as a given name and 24701 occurrences of 1193814 as a family name). The frequencies are 0.40 and 0.02, respectively. 
+	
+	\section{Previous Work}
+	% To be added later. I am too lazy now to read other people's stuff
 	
 	\section{Data Extraction}
-	% all phases
+		\subsection{Parsing of raw given name strings}
+		A raw given name string can contain one or more given names, e.g. the raw given name string "John Maynard" contains two given names: "John" and "Maynard". When parsing raw given name strings, however, a number of clauses (rules) must be taken into consideration. Below are those currently applied.
+		\begin{itemize}
+			\item Remove items consisting of one or two characters. Example: "John Maynard W", "John Maynard Wu" $ \rightarrow $ ["John", "Maynard"]
+			\item Do not remove items consisting of two characters if the item begins with a consonant followed by a vowel and all items are short (Chinese names like "Xi"). The item "Ng" is accepted as an exception.
+			\item Items containing '-' are considered given names and are not separated: "Karl-Heinz" $ \rightarrow $ ["Karl-Heinz"]
+			\item Raw strings for given names, if they contain nobiliary particles are most probably results of confusion of given and family names, like in "Bryanne Brissian de Souza" or "Annabelle von der". In such raw strings, the nobiliary particle and all components after it are ignored. A stronger rule might be to ignore such cases completely, since cases are possible like "Dagmar Meyer Zu", where "Meyer" is certainly an item of the family name.
+			\item Items consisting of one character are ignored: "M G M O" $ \rightarrow $ [].
+			\item Prefixes like "Junior", "Jr.", "Senior", etc. are irnored.
+		\end{itemize}
+	
+		\paragraph{List of nobiliary particles\\}
+		\begin{itemize}\itemsep-4pt
+		\item 'de', 'du', "des', 'de la' (France)
+		\item 'von', 'vom', 'des', 'der', 'dem', 'zu', 'zur', 'auf' (Germany)
+		\item 'van', 'de', 'den', 'het', 'aan' (Netherlands)
+		\item 'af' (Sweden)
+		\item 'di', 'da', 'del', 'della', 'dei', 'dal', 'dalla', 'dai', 'degli' (Italy)
+		\item 'dos', 'das' (Portugal)
+		\end{itemize}
+		
+		\paragraph{List of suffixes\\}
+		\begin{itemize}\itemsep-4pt
+			\item 'junior'
+			\item 'jun.'
+			\item 'Jr.'
+			\item 'Jr'
+			\item 'jr.'
+			\item 'jr'
+			\item 'JR.'
+			\item 'JR'
+			\item 'senior'
+			\item 'sen.'
+			\item 'Sr.'
+			\item 'Sr'
+			\item 'sr.'
+			\item 'sr'
+			\item 'SR.'
+			\item 'SR'
+			\item 'III'
+			\item 'iii'
+			\item 'IV'
+			\item 'iv'
+		\end{itemize}
 		\subsection{Program Tools}
 		
 	\section{Results}
