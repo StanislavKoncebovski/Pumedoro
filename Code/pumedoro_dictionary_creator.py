@@ -1,30 +1,29 @@
 from typing import Optional
-
-from pumedoro_name import PumedoroName
 import xml.etree.ElementTree as ET
 import re
 import pandas as pd
 import fuzzy
 import glob
-import os
 
 class PumedoroDictionaryCreator:
-    '''
-    Creates a name dictionary out of an XML file with raw given and family names extracted from PubMedArticles.
-    '''
-    #region Class Constants
+    # region Class Constants
+    # Creates a name dictionary out of an XML file with raw given and family names extracted from PubMedArticles.
     PREFIXES = ['JUNIOR', 'JUN.', 'JR.', 'JR', 'JR.', 'JR', 'JR.', 'JR', 'JÚNIOR',
                 'SENIOR', 'SEN.', 'SR.', 'SR', 'SR.', 'SR', 'SR.', 'SR', 'III', 'III', 'IV', 'IV']
 
-    '''
-    A given name item of two characters is valid if: (1) it has a capital letter as the first character, 
-    (2) the second letter is a non-capitals vowel, or
-    (3) the item is 'Ng'
-    '''
+    # A given name item of two characters is valid if: (1) it has a capital letter as the first character,
+    # (2) the second letter is a non-capitals vowel, or
+    # (3) the item is 'Ng'
     GIVEN_2CHAR_NAME_PATTERN = re.compile("^[A-Z][aeiouy]{1}$|^Ng$")
 
+    # Regex of an abbreviation:
+    # An item is an abbreviation if:
+    #  * it consists of one character are ignored: ("M G M O" -> []) or
+    #  * it contains one-letter elements followed by dots: ("R.N.J.M.A." -> []) or
+    #  * it contains one-letter elements followed by dots and '-': ("J.-B." -> []).
     ABBREVIATION_PATTERN = re.compile("^([A-Z]\.)+$|^([A-Z]\.)-([A-Z]\.)$")
 
+    # Regex for nobiliary particles (https://en.wikipedia.org/wiki/Nobiliary_particle)
     NOBILIARITY_PARTICLES = ['aan', 'af', 'auf', 'da', 'dai', 'dal', 'dalla', 'das', 'de la', 'de', 'de', 'degli',
                              'dei', 'del', 'della', 'dem', 'den', 'der', 'des', 'des', 'di', 'dos', 'du', 'het',
                              'van', 'vom', 'von', 'zu', 'zur']
@@ -47,8 +46,16 @@ class PumedoroDictionaryCreator:
         '''
         return self._dictionary
 
-
     def get_dataframe(self, sortby: str=''):
+        '''
+        Gets the dictionary converted into a pandas DataFrame with optionally sorted rows.
+        @param sortby: Indicates how to sort the rows:
+                       'name': the rows are sorted by name, in lexicographic order;
+                       'occ_given' or 'given': the rows are sorted by the occurrences as a given name, in descending order;
+                       'occ_family' or 'family': the rows are sorted by the occurrences as a family name, in descending order;
+                       otherwise the data frame is not sorted.
+        @return: The resulting data frame.
+        '''
         data = []
         for key in self._dictionary:
             data.append([key, self._dictionary[key][0], self._dictionary[key][1], self._dictionary[key][2], self._dictionary[key][3]])
@@ -71,11 +78,11 @@ class PumedoroDictionaryCreator:
         '''
         self._dictionary.clear()
 
-    def update_dictionary(self, folder: str, recursive: bool = True):
+    def update_dictionary(self, folder: str):
         '''
-        Updates the name dictionary from a folder containing XML files with raw extraction data.
+        Updates the name dictionary from a folder containing XML files with raw extraction data. Works recursively:
+        includes all subfolders of lower levels containing any XML files.
         @param folder: The path to the folder.
-        @param recursive: carry out recursively.
         @return: None.
         '''
         file_names = glob.glob(folder + '/**/*.xml', recursive=True)
@@ -86,14 +93,12 @@ class PumedoroDictionaryCreator:
             self.update_dictionary_from_file(file_name)
             count += 1
 
-    def sort_dictionary(self):
-        pass
-
     def store_dictionary(self, file_name: str, sortby: str = ''):
         '''
         Stores the dictionary as a CSV file
-        @param file_name:
-        @return:
+        @param file_name: The name of the file to save under.
+        @param sortby: Indicates how to sort the rows in the output file. @see get_dataframe for details.
+        @return: None.
         '''
         df = self.get_dataframe(sortby)
         df.to_csv(file_name)
@@ -144,11 +149,9 @@ class PumedoroDictionaryCreator:
         Extracts valid given names from a raw name string.
         @param name_string: The raw string to extract from.
         @param apply_strict_rules: If set to True, raw given name string is completely ignored
-            if confusion of given and family names may be detected.
+            if confusion of given and family names may be detected (ignored in current version).
         @return: List of valid given names.
         '''
-        # result = []
-
         # (1) split by space:
         items = name_string.split(' ')
 
@@ -181,13 +184,6 @@ class PumedoroDictionaryCreator:
         Extracts valid family name from a raw name string.
         @param name_string: The raw string to extract from.
         @return: The valid family name.
-        @cases:
-        "Leite-Júnior" -> "Leite": ignore "Júnior", "Junior", etc. in raw family names.
-        "Langhi Júnior" -> "Langhi": see above.
-        "Del Grande" -> "Del Grande"
-        "von Hardenberg" -> "von Hardenberg"
-        "Pogge von Strandmann" -> "Pogge von Strandmann"
-        "von dem Knesebeck" -> "von dem Knesebeck"
         '''
         # (1) split by space:
         try:
@@ -201,12 +197,22 @@ class PumedoroDictionaryCreator:
         return ' '.join(items)
 
     def _get_soundex(self, text: str):
+        '''
+        Computes the Soundex of a string.
+        @param text: The string to compute Soundex for.
+        @return: The Soundex value.
+        '''
         try:
             return self._soundex(text)
         except:
             return ''
 
     def _get_metaphone(self, text: str):
+        '''
+        Computes the Methaphone of a string.
+        @param text: The string to compute Methaphone for.
+        @return: The Methaphone value.
+        '''
         try:
             return self._dmeta(text)[0].decode("utf-8")
         except:

@@ -1,18 +1,23 @@
 import sqlite3
-
 import pandas
-
 
 class PumedoroDatabase:
     #region Class constants
+
+    # SQL statement for the creation of the table 'name'.
     SQL_CREATION_NAME = "CREATE TABLE IF NOT EXISTS `name` (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(64), " \
                         "occ_given INTEGER, occ_family INTEGER, soundex VARCHAR(8), metaphone VARCHAR(8))"
 
+    # SQL statement for the creation of the table 'version'.
     SQL_CREATION_VERSION = "CREATE TABLE IF NOT EXISTS `version` (number INTEGER PRIMARY KEY AUTOINCREMENT, " \
                            "date_time TIME, comment VARCHAR(128))"
     #endregion
 
     def __init__(self, database_path: str):
+        '''
+        Initializes the database connection and cursor.
+        @param database_path:
+        '''
         self._connection = sqlite3.connect(database_path)
         self._cursor = self._connection.cursor()
 
@@ -30,7 +35,7 @@ class PumedoroDatabase:
     def clear_names(self):
         '''
         Clears the `names` table
-        @return:
+        @return: None.
         '''
         self._cursor.execute("DELETE FROM `name`")
 
@@ -38,7 +43,7 @@ class PumedoroDatabase:
         '''
         Populates the `name` table of the database with data from a dafa frame.
         @param data_frame: The data frame to populate with.
-        @return:
+        @return: None.
         '''
         error_file = open("errors.txt", "a")
 
