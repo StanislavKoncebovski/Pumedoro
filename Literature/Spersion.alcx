@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PublicationCollection Name="Spersion" Description="Bibliography for the Spersion project">
+  <CollectionFolder Name="Personal Name Extraction" Description="">
+    <Publications>
+      <Article Id="ALC_20221118124139170" SystemId="">
+        <Authors>
+          <PersonName Source="Vichot, Frantz Dillet, Bruno" FamilyName="Vichot" GivenName="Frantz " MiddleName="" Suffix="" ParseScore="0.875" />
+          <PersonName Source="" FamilyName="Dillet " GivenName="Bruno" MiddleName="" Suffix="" ParseScore="1" />
+        </Authors>
+        <Title>Automatic Processing of Proper Names in Texts</Title>
+        <Doi>10.3115/976973.976978</Doi>
+        <Note></Note>
+        <Abstract></Abstract>
+        <Language></Language>
+        <Url></Url>
+        <ForeignIdentifiers />
+        <Journal />
+        <Year></Year>
+        <Volume />
+        <Issue />
+        <Pages />
+        <Issn />
+      </Article>
+      <Article Id="ALC_20221118130153452" SystemId="">
+        <Authors>
+          <PersonName Source="Wang, Richard C. Cohen, William W." FamilyName="Wang" GivenName="Richard C." MiddleName="" Suffix="" ParseScore="0.875" />
+          <PersonName Source="" FamilyName="Cohen" GivenName=" William W." MiddleName="" Suffix="" ParseScore="1" />
+        </Authors>
+        <Title> [Association for Computational Linguistics the conference - Vancouver, British Columbia, Canada (2005.10.06-2005.10.08)] Proceedings of the conference on Human Language Technology and Empirical Methods in Natural Language Processing  - HLT '05 - Extracting personal names from email</Title>
+        <Doi>10.3115/1220575.1220631</Doi>
+        <Note></Note>
+        <Abstract></Abstract>
+        <Language></Language>
+        <Url></Url>
+        <ForeignIdentifiers />
+        <Journal />
+        <Year></Year>
+        <Volume />
+        <Issue />
+        <Pages />
+        <Issn />
+      </Article>
+      <Article Id="ALC_20221118130339268" SystemId="">
+        <Authors>
+          <PersonName Source="Casimir Borkowski" FamilyName="Borkowski" GivenName="Casimir" MiddleName="" Suffix="" ParseScore="1" />
+        </Authors>
+        <Title>An experimental system for automatic identification of personal names and personal titles in newspaper texts</Title>
+        <Doi>10.1002/asi.5090180305</Doi>
+        <Note></Note>
+        <Abstract></Abstract>
+        <Language></Language>
+        <Url></Url>
+        <ForeignIdentifiers />
+        <Journal>Journal of the American Society for Information Science and Technology</Journal>
+        <Year>1967</Year>
+        <Volume>18</Volume>
+        <Issue>3</Issue>
+        <Pages />
+        <Issn />
+      </Article>
+    </Publications>
+    <Folders />
+  </CollectionFolder>
+</PublicationCollection>

@@ -1,3 +1,4 @@
+import json
 from xml.dom import minidom
 
 import requests
@@ -51,11 +52,63 @@ class PubMedNameFetcher:
         extract = True
         while extract:
             print(f"Extracting authors with IDs from {start} to {min(len(ids), start + PubMedNameFetcher.DEFAULT_SIZE_OF_EXTRACTION_PORTION)}")
-            self._authors += self._extract_authors(ids[start:start + PubMedNameFetcher.DEFAULT_SIZE_OF_EXTRACTION_PORTION])
+            authors = self._extract_authors(ids[start:start + PubMedNameFetcher.DEFAULT_SIZE_OF_EXTRACTION_PORTION])
+            self._authors += authors
+            print(f"Extracted {len(authors)} authors")
             start += PubMedNameFetcher.DEFAULT_SIZE_OF_EXTRACTION_PORTION
             extract = start <= len(ids)
 
+    def create_authors_by_topics_and_countries(self, topics: list[str], countries: list[str], saveas: str='csv'):
+        '''
+        Creates a collection of author names from a list of topics and a list of countries. The topics are concatenated;
+        the countries are iterated over, so that a cumulative list is created for the topics and countries, e.g.
+        topics = ["education", "nurse"], countries = ["China", "UK", "Australia"]: querying occurs with query strings like
+        "education+nurse+China", education+nurse+UK", education+nurse+Australia".
+        @param topics: A list of topics.
+        @param countries: A list of countries to iterate over.
+        @param saveas: How to save the result: 'csv' (default): as CSV, 'json': as JSON, 'xml' as XML.
+        The name of the resulting file is {topic_1}_...{topic_n}.{ext}, where {ext} is the desired extension, e.g.
+        "education_nurse.json".
+        @return: None.
+        '''
+        basic_token = '+'.join(topics)
+
+        self._authors.clear()
+
+        for country in countries:
+            print("\n*************************************************")
+            print(f"****  Processing {country} ****")
+            print("*************************************************\n")
+
+            token = f"{basic_token}+{country}"
+            self.fetch_author_names(token)
+
+        file_name = f"{basic_token}.{saveas}"
+
+        print(f"Saving results as {file_name}")
+
+        match saveas:
+            case "csv":
+                self.write_csv(file_name)
+            case "json":
+                self.write_json(file_name)
+            case "xml":
+                self.write_xml(file_name)
+            case _:
+                print("Unsupported format")
+
+    def create_authors_by_topics_and_country_file(self, topics: list[str], country_file_name: str, saveas: str= 'csv'):
+        with open(country_file_name, "r", encoding="utf-8") as country_file:
+            countries = country_file.read().split('\n')
+
+            self.create_authors_by_topics_and_countries(topics, countries, saveas)
+
     def write_xml(self, xml_file_name):
+        '''
+        Writes the author name collection to an XML file.
+        @param xml_file_name: The name of the XML file.
+        @return: None.
+        '''
         x = XElement("Authors")
         for author in self._authors:
             x_author = ET.SubElement(x, "Author")
@@ -75,10 +128,27 @@ class PubMedNameFetcher:
 
 
     def write_json(self, json_file_name):
-        pass
+        '''
+        Writes the author name collection to a JSON file.
+        @param json_file_name: The name of the JSON file.
+        @return:
+        '''
+        tuples = [(a.given_name, a.family_name) for a in self._authors]
+        json_string = json.dumps(tuples, ensure_ascii=False, indent=2)
+        with open(json_file_name, "w", encoding="utf-8") as file:
+            file.write(json_string)
 
     def write_csv(self, csv_file_name, separator = ','):
-        pass
+        '''
+        Writes the author name collection to a CSV file.
+        @param csv_file_name: The name of the CSV file.
+        @param separator: The separator, default = ','.
+        @return: None.
+        '''
+        tuples = [(a.given_name, a.family_name) for a in self._authors]
+        with open(csv_file_name, "w", encoding="utf-8") as file:
+            for given, family in tuples:
+                file.write(f"{given}{separator}{family}\n")
     #endregion
 
     #region Private Auxiliary
@@ -107,6 +177,8 @@ class PubMedNameFetcher:
         '''
         number_of_finds = self._get_number_of_finds(token)
 
+        print(f"Found {number_of_finds} articles")
+
         if number_of_finds <= 0:
             return []
 
@@ -115,11 +187,11 @@ class PubMedNameFetcher:
         count_ids_downloaded = 0
         start = 0
 
-        while count_ids_downloaded < number_of_finds:
+        while start < number_of_finds:
             ids_portion = self._get_portion_of_ids_for_token(token, start, PubMedNameFetcher.NUMBER_OF_IDS_IN_PARTIAL_REQUEST)
             result += ids_portion
             count_ids_downloaded += len(ids_portion)
-            start = len(result)
+            start += PubMedNameFetcher.NUMBER_OF_IDS_IN_PARTIAL_REQUEST
 
         print(f"count_ids_downloaded={count_ids_downloaded}, new start index = {start}")
 
@@ -206,15 +278,15 @@ class PubMedNameFetcher:
             result.append(pubmedAuthor)
 
         return result
-
-
-#endregion
+    #endregion
 
 if __name__ == '__main__':
     fetcher = PubMedNameFetcher()
-    token = "education+Malta"
 
-    fetcher.fetch_author_names(token)
-    fetcher.write_xml("test_malta.xml")
+    topics = ["innovation"]
+
+    country_file = r"P:\Projects\1010.Alcor\Code\Python\countries2_no_china.txt"
+
+    fetcher.create_authors_by_topics_and_country_file(topics, country_file)
 
 
